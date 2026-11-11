@@ -7,7 +7,7 @@ A single missing witness aborts the run, so a successful exit means the
 recorded interval is fully covered.
 
 Usage:
-    python src/main.py
+    python proof/main.py
 """
 
 from __future__ import annotations
