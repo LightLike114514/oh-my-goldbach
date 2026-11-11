@@ -54,7 +54,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"certificate digest: {helper.short_digest(result.check.digest, 32)}")
     print(f"verified rows: {result.check.rows}")
     print(f"verification time: {elapsed:.3f}s")
-    print("VERIFIED")
+    print(f"VERIFIED T({constants.limit})")
     return 0
 
 

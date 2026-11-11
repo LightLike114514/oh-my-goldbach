@@ -31,7 +31,7 @@ python src/main.py
 - **Independent checker** (`goldbach.checker`): builds its own list-based
   sieve, walks every row, re-checks both addends and the digest, and
   rejects four mutated certificates before accepting the real one.
-- **Kernel** (`goldbach.kernel`): prints `VERIFIED` only if every row,
+- **Kernel** (`goldbach.kernel`): prints `VERIFIED T(N)` only if every row,
   the digest, and every mutation test pass; otherwise it raises and the
   entry point exits non-zero.
 
