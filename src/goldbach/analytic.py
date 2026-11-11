@@ -1,13 +1,14 @@
-"""Analytic tail certificate.
+"""Exploratory analytic estimate (appendix only).
 
-The finite base proves the conjecture up to ``base_limit``. For the tail we
-evaluate the Hardy-Littlewood lower bound
+This module evaluates the Hardy-Littlewood main term
 
     L(n) = 2 * C2 * S(n) * n / (log n)^2 * major_fraction
 
-on a deterministic sample window. Since n / (log n)^2 is increasing for
-n >= e^2 and S(n) >= 1 for even n, a positive lower bound at the start of
-the window extends to every larger even n in the induction step.
+on a deterministic sample window.  It is a heuristic exploration, not a
+proof: the expression is not a proven lower bound on the number of prime
+pairs, and the sampled window does not cover the infinite tail.  The
+certificate verdict is produced by ``goldbach.checker`` and does not use
+this module.
 """
 
 from __future__ import annotations
@@ -22,7 +23,7 @@ from .singular import singular_series_bounds, twin_constant_bounds
 
 
 @dataclass(frozen=True)
-class TailCertificate:
+class TailEstimate:
     start: int
     samples: int
     minimum_bound: float
@@ -33,13 +34,13 @@ class TailCertificate:
     singular_floor: float
 
 
-def major_arc_bound(
+def heuristic_estimate(
     n: int,
     c2: Interval,
     series: Interval,
     fraction: float,
 ) -> Interval:
-    """Outward-rounded lower bound for the number of prime pairs."""
+    """Heuristic main-term estimate; this is not a proven lower bound."""
     log_n = Interval.point(math.log(n))
     numerator = Interval.point(2.0) * c2 * series * Interval.point(float(n))
     return (numerator / (log_n * log_n)) * Interval.point(fraction)
@@ -52,8 +53,8 @@ def monotonicity_margin(start: int) -> float:
     return math.log(start) - 2.0
 
 
-def certify_tail(constants: AnalyticConstants) -> TailCertificate:
-    """Build the tail certificate over a deterministic sample window."""
+def estimate_tail(constants: AnalyticConstants) -> TailEstimate:
+    """Build the exploratory tail estimate over a deterministic window."""
     constants.validate()
     margin = monotonicity_margin(constants.tail_start)
     if margin <= 0.0:
@@ -73,7 +74,7 @@ def certify_tail(constants: AnalyticConstants) -> TailCertificate:
         floor = series.lower()
         if floor < 1.0:
             raise ValueError(f"singular series below one at n = {n}")
-        bound = major_arc_bound(n, c2, series, constants.major_fraction).lower()
+        bound = heuristic_estimate(n, c2, series, constants.major_fraction).lower()
         if minimum_bound is None or bound < minimum_bound:
             minimum_bound = bound
             minimum_n = n
@@ -86,14 +87,14 @@ def certify_tail(constants: AnalyticConstants) -> TailCertificate:
     # The singular series fluctuates between sample points, so monotonicity
     # is checked on the uniform lower envelope S(n) >= 1.
     envelope = tuple(
-        major_arc_bound(n, c2, Interval.from_fraction(Fraction(1, 1)), constants.major_fraction).lower()
+        heuristic_estimate(n, c2, Interval.from_fraction(Fraction(1, 1)), constants.major_fraction).lower()
         for n in (constants.tail_start, constants.tail_start + 2)
     )
     growth = envelope[1] - envelope[0]
     if growth <= 0.0:
         raise ValueError("lower envelope is not increasing on the tail")
 
-    return TailCertificate(
+    return TailEstimate(
         start=constants.tail_start,
         samples=constants.samples,
         minimum_bound=minimum_bound,
@@ -105,7 +106,7 @@ def certify_tail(constants: AnalyticConstants) -> TailCertificate:
     )
 
 
-def describe_tail(cert: TailCertificate) -> str:
+def describe_tail(cert: TailEstimate) -> str:
     return (
         f"tail n>={cert.start} samples={cert.samples} "
         f"min={cert.minimum_bound:.6f} growth={cert.growth:.6f}"

@@ -1,12 +1,13 @@
-"""Assignment entry point: Goldbach certificate pipeline.
+"""Assignment entry point: finite Goldbach certificate.
 
 Run from the repository root:
 
     python src/main.py
 
-The program builds the finite base certificate and the analytic tail
-certificate, hands both to the proof kernel, and prints the report. The
-kernel is the only component allowed to emit the final QED line.
+The producer searches bounded witnesses for every even n in the declared
+range, the independent checker validates every row and the digest, and the
+program prints VERIFIED only if the certificate passes.  The infinite tail
+is outside the certificate scope and is reported as OPEN.
 """
 
 from __future__ import annotations
@@ -17,24 +18,20 @@ from dataclasses import replace
 
 import helper
 
+from goldbach.appendix import analytic_note
 from goldbach.constants import DEFAULT_CONSTANTS
-from goldbach.kernel import ProofError
-from goldbach.pipeline import run_pipeline
+from goldbach.kernel import VerificationError, verify
 from goldbach.report import render_report
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Build and verify a Goldbach certificate."
+        description="Build and verify a finite Goldbach certificate."
     )
-    parser.add_argument("--base", type=int, default=DEFAULT_CONSTANTS.base_limit,
-                        help="upper bound of the exhaustive finite base")
-    parser.add_argument("--tail", type=int, default=DEFAULT_CONSTANTS.tail_start,
-                        help="start of the analytic tail")
-    parser.add_argument("--samples", type=int, default=DEFAULT_CONSTANTS.samples,
-                        help="number of tail sample points")
-    parser.add_argument("--sieve", type=int, default=DEFAULT_CONSTANTS.sieve_limit,
-                        help="sieve limit for the certificate tables")
+    parser.add_argument("--limit", type=int, default=DEFAULT_CONSTANTS.limit,
+                        help="upper bound of the certified range")
+    parser.add_argument("--bound", type=int, default=DEFAULT_CONSTANTS.candidate_bound,
+                        help="prime search budget used by the producer")
     return parser
 
 
@@ -42,25 +39,22 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     constants = replace(
         DEFAULT_CONSTANTS,
-        base_limit=args.base,
-        tail_start=args.tail,
-        samples=args.samples,
-        sieve_limit=args.sieve,
+        limit=args.limit,
+        candidate_bound=args.bound,
     )
     started = time.perf_counter()
     try:
-        result = run_pipeline(constants)
-    except (ProofError, ValueError) as exc:
-        print(f"certificate rejected: {exc}")
+        result = verify(constants)
+    except (VerificationError, ValueError) as exc:
+        print(f"REJECTED: {exc}")
         return 1
     elapsed = time.perf_counter() - started
-    print(render_report(result))
+    print(render_report(result, analytic_note()))
     print()
-    print(f"certificate digest: {helper.short_digest(result.digest, 32)}")
-    print(f"first witness: {helper.format_witness(result.base.first.n, result.base.first.p, result.base.first.q)}")
-    print(f"kernel checks: {len(result.steps)}")
+    print(f"certificate digest: {helper.short_digest(result.check.digest, 32)}")
+    print(f"verified rows: {result.check.rows}")
     print(f"verification time: {elapsed:.3f}s")
-    print("QED")
+    print("VERIFIED")
     return 0
 
 

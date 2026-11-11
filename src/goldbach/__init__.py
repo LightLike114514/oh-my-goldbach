@@ -1,25 +1,24 @@
-"""Goldbach certificate pipeline.
+"""Finite Goldbach certificate pipeline.
 
 Modules:
     primes      sieve, Miller-Rabin, factorisation, segmented sieve
-    intervals   outward-rounded interval arithmetic
-    singular    twin-prime constant and singular series
-    analytic    Hardy-Littlewood tail certificate
-    certificate finite base certificate and witness verification
-    kernel      proof kernel that emits the final verdict
-    pipeline    end-to-end orchestration
-    report      human-readable certificate report
+    certificate bounded-witness certificate producer
+    checker     independent row-by-row checker and mutation self-tests
+    kernel      end-to-end verification result
+    pipeline    orchestration used by the entry point
+    report      certificate report
+    appendix    exploratory analytic heuristic (not part of the verdict)
 """
 
-from .constants import AnalyticConstants, DEFAULT_CONSTANTS
-from .kernel import ProofError, ProofKernel, ProofResult
+from .constants import CertificateConstants, DEFAULT_CONSTANTS
+from .kernel import VerificationError, VerificationResult, verify
 from .pipeline import run_pipeline
 
 __all__ = [
-    "AnalyticConstants",
+    "CertificateConstants",
     "DEFAULT_CONSTANTS",
-    "ProofError",
-    "ProofKernel",
-    "ProofResult",
+    "VerificationError",
+    "VerificationResult",
     "run_pipeline",
+    "verify",
 ]

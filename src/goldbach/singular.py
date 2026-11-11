@@ -14,7 +14,11 @@ TWIN_CONSTANT_UPPER = 0.6601618159
 
 
 def twin_constant_bounds(cutoff: int = 200_000) -> Interval:
-    """Rigorous bounds from a partial Euler product plus a tail estimate.
+    """Heuristic bounds from a partial Euler product plus a tail estimate.
+
+    This exploratory helper uses ordinary floating-point arithmetic; it is
+    not an outward-rounded numerical certificate and is not used for the
+    certificate verdict.
 
     The omitted factors satisfy
         prod_{p > cutoff} (1 - 1/(p-1)^2) >= 1 - sum_{m > cutoff} 1/(m-1)^2
